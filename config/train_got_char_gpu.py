@@ -1,7 +1,7 @@
 # train a miniature character-level shakespeare model
 # good for debugging and playing on macbooks and such
 
-out_dir = 'out-got-char'
+out_dir = 'out-got-char-gpu'
 eval_interval = 250 # keep frequent because we'll overfit
 eval_iters = 200
 log_interval = 10 # don't print too too often
@@ -10,7 +10,7 @@ log_interval = 10 # don't print too too often
 always_save_checkpoint = False
 
 wandb_log = False # override via command line if you like
-wandb_project = 'got-char'
+wandb_project = 'got-char-gpu'
 wandb_run_name = 'mini-gpt'
 
 dataset = 'got'
