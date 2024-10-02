@@ -7,6 +7,8 @@ from contextlib import nullcontext
 import torch
 import tiktoken
 from model import GPTConfig, GPT
+import math
+import numpy as np
 
 # -----------------------------------------------------------------------------
 init_from = 'resume' # either 'resume' (from an out_dir) or a gpt2 variant (e.g. 'gpt2-xl')
@@ -63,7 +65,7 @@ if load_meta:
     with open(meta_path, 'rb') as f:
         meta = pickle.load(f)
     # TODO want to make this more general to arbitrary encoder/decoder schemes
-    stoi, itos = meta['stoi'], meta['itos']
+    stoi, itos, train_data_probs, chars = meta['stoi'], meta['itos'], meta['train_data_probs'], meta['chars']
     encode = lambda s: [stoi[c] for c in s]
     decode = lambda l: ''.join([itos[i] for i in l])
 else:
@@ -80,6 +82,16 @@ if start.startswith('FILE:'):
 start_ids = encode(start)
 x = (torch.tensor(start_ids, dtype=torch.long, device=device)[None, ...])
 
+def kl_divergence(sample_data_probs):
+    kl_div = 0.0
+    epsilon = 10e-10
+    for train_prob, sample_prob in zip(train_data_probs, sample_data_probs):
+        kl_div += train_prob * np.log((train_prob + epsilon) / (sample_prob + epsilon))
+    
+    return kl_div
+
+total_kl_div = 0.0
+total_perplexity = 0.0
 # run generation
 with torch.no_grad():
     with ctx:
@@ -87,3 +99,12 @@ with torch.no_grad():
             y = model.generate(x, max_new_tokens, temperature=temperature, top_k=top_k)
             print(decode(y[0].tolist()))
             print('---------------')
+
+            sample_data = decode(y[0].tolist())
+            sample_data_probs = []
+            for char in chars:
+                sample_data_probs.append((sample_data.count(char))/len(sample_data))
+
+            total_kl_div += kl_divergence(sample_data_probs)
+
+print(f"Average KL Divergence = {total_kl_div / num_samples}")
