@@ -82,6 +82,16 @@ if start.startswith('FILE:'):
 start_ids = encode(start)
 x = (torch.tensor(start_ids, dtype=torch.long, device=device)[None, ...])
 
+# Perplexity calculation function
+def calculate_perplexity(sample_data, sample_data_probs):
+    nll = 0.0
+    epsilon = 10e-10
+    for char in sample_data:
+        nll += np.log2(sample_data_probs[chars.index(char)] + epsilon)
+    nll /= len(sample_data)
+
+    return 2 ** (-nll)
+
 def kl_divergence(sample_data_probs):
     kl_div = 0.0
     epsilon = 10e-10
@@ -106,5 +116,7 @@ with torch.no_grad():
                 sample_data_probs.append((sample_data.count(char))/len(sample_data))
 
             total_kl_div += kl_divergence(sample_data_probs)
+            total_perplexity  += calculate_perplexity(sample_data, sample_data_probs)
 
 print(f"Average KL Divergence = {total_kl_div / num_samples}")
+print(f"Average Perplexity = {total_perplexity / num_samples}")
