@@ -11,7 +11,8 @@ import numpy as np
 import argparse
 
 parser = argparse.ArgumentParser(description="A script that demonstrates argparse")
-parser.add_argument("--training_type", type=str, default="scratch", help="argument to change parse method based on finetuning or training from scratch")
+parser.add_argument("--training_type", type=str, default="scratch")
+parser.add_argument("--training_data", type=str, default="0.9")
 args = parser.parse_args()
 
 # download the tiny shakespeare dataset
@@ -49,8 +50,9 @@ def decode(l):
 
 # create the train and test splits
 n = len(data)
-train_data = data[:int(n*0.9)]
-val_data = data[int(n*0.9):]
+training_amt = float(args.training_data)
+train_data = data[:int(n*training_amt)]
+val_data = data[int(n*training_amt):]
 
 train_data_probs = []
 for char in chars:
