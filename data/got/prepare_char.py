@@ -52,11 +52,16 @@ def decode(l):
 n = len(data)
 training_amt = float(args.training_data)
 train_data = data[:int(n*training_amt)]
-val_data = data[int(n*training_amt):]
+val_data = data[int(n*0.9):]
 
 train_data_probs = []
 for char in chars:
     train_data_probs.append((train_data.count(char))/len(train_data))
+
+dataset = data[:int(n*0.9)]
+dataset_probs = []
+for char in chars:
+    dataset_probs.append((dataset.count(char))/len(dataset))
 
 # encode both to integers
 train_ids = encode(train_data)
@@ -77,6 +82,7 @@ meta = {
     'itos': itos,
     'stoi': stoi,
     'train_data_probs': train_data_probs,
+    'dataset_probs': dataset_probs,
     'chars': chars,
 }
 with open(os.path.join(os.path.dirname(__file__), 'meta.pkl'), 'wb') as f:
